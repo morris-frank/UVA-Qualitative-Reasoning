@@ -12,8 +12,8 @@
 <!-- S -->
 <g id="node1" class="node">
 <title>S</title>
-<ellipse fill="none" stroke="#000000" stroke-width="2" cx="87" cy="-335" rx="27" ry="18"/>
-<text text-anchor="middle" x="87" y="-332" font-family="Times,serif" font-size="10.00" fill="#000000">Source</text>
+<ellipse fill="none" stroke="#000000" stroke-width="2" cx="86" cy="-335" rx="27" ry="18"/>
+<text text-anchor="middle" x="86" y="-332" font-family="Times,serif" font-size="10.00" fill="#000000">Inflow</text>
 </g>
 <!-- Sd -->
 <g id="node2" class="node">
@@ -24,7 +24,7 @@
 <!-- S&#45;&gt;Sd -->
 <g id="edge1" class="edge">
 <title>S&#45;&gt;Sd</title>
-<path fill="none" stroke="#000000" d="M73.9809,-319.1601C62.814,-305.5737 46.9666,-286.2927 36.8343,-273.9651"/>
+<path fill="none" stroke="#000000" d="M72.906,-318.7989C61.9065,-305.1894 46.4451,-286.0592 36.5737,-273.8454"/>
 </g>
 <!-- Sm -->
 <g id="node3" class="node">
@@ -35,7 +35,7 @@
 <!-- S&#45;&gt;Sm -->
 <g id="edge2" class="edge">
 <title>S&#45;&gt;Sm</title>
-<path fill="none" stroke="#000000" d="M89.9663,-316.9551C91.9096,-305.133 94.4292,-289.8058 96.3135,-278.3429"/>
+<path fill="none" stroke="#000000" d="M89.2135,-316.9551C91.3188,-305.133 94.0483,-289.8058 96.0896,-278.3429"/>
 </g>
 <!-- Sms -->
 <g id="node4" class="node">
@@ -66,8 +66,8 @@
 <!-- D -->
 <g id="node5" class="node">
 <title>D</title>
-<ellipse fill="none" stroke="#000000" stroke-width="2" cx="195" cy="-335" rx="27" ry="18"/>
-<text text-anchor="middle" x="195" y="-332" font-family="Times,serif" font-size="10.00" fill="#000000">Drain</text>
+<ellipse fill="none" stroke="#000000" stroke-width="2" cx="195" cy="-335" rx="29.8229" ry="18"/>
+<text text-anchor="middle" x="195" y="-332" font-family="Times,serif" font-size="10.00" fill="#000000">Outflow</text>
 </g>
 <!-- Dd -->
 <g id="node6" class="node">
@@ -78,7 +78,7 @@
 <!-- D&#45;&gt;Dd -->
 <g id="edge4" class="edge">
 <title>D&#45;&gt;Dd</title>
-<path fill="none" stroke="#000000" d="M215.4761,-322.9455C240.5149,-308.2049 282.276,-283.6198 304.3269,-270.6382"/>
+<path fill="none" stroke="#000000" d="M216.3164,-322.4509C241.5215,-307.6123 282.7877,-283.3185 304.5386,-270.5135"/>
 </g>
 <!-- Dm -->
 <g id="node7" class="node">
