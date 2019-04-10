@@ -205,9 +205,21 @@ def edge_filter(quantities: List[Quantity], dependencies: List[Dependency], infl
     return _filter
 
 
-def repr_state(s):
-    rs = {'MAX': 'max', 'POS': '+', 'NEG': '-', 'ZERO': '0'}
-    return 'In[{},{}]\nVol[{},{}]\nOut[{},{}]'.format(rs[s[0][0]], rs[s[0][1]], rs[s[1][0]], rs[s[1][1]], rs[s[2][0]], rs[s[2][1]])
+def repr_func(quantities: List[Quantity]) -> Callable[[Node_State], str]:
+    """Gives a function that can stringify a node given our quantaties
+
+    Arguments:
+        quantities {List[Quantity]} -- the quantitites
+
+    Returns:
+        Callable[[Node_State], str] -- the repr function
+    """
+    sq = [q.name[:3] for q in quantities]
+    sv = {'MAX': 'max', 'POS': '+', 'NEG': '-', 'ZERO': '0'}
+    def _repr(node: Node_State):
+        rlist = ['{}[{},{}]'.format(sq[i], sv[mag], sv[drv]) for i,(mag,drv) in enumerate(node)]
+        return '\n'.join(rlist)
+    return _repr
 
 
 def build_graph(nodes: List[Node_State], edges: List[Edge_State], quantities: List[Quantity], dependencies: List[Dependency], influenced_edges: Dict[Edge_State, bool]) -> pgv.AGraph:
@@ -232,7 +244,8 @@ def build_graph(nodes: List[Node_State], edges: List[Edge_State], quantities: Li
         normalize=True,
         smoothing='avg_dist',
         nodesep=0.2,
-        ranksep=0.01
+        ranksep=0.01,
+        pack=True
     )
 
     G.add_edges_from(edges, fontsize=20)
@@ -251,13 +264,14 @@ def build_graph(nodes: List[Node_State], edges: List[Edge_State], quantities: Li
         G.get_edge(old, new).attr['label'] = ','.join(sorted(labels))
 
     # Adjust node styles
+    _repr = repr_func(quantities)
     for node in nodes:
         if not G.has_node(node):
             continue
         _node = G.get_node(node)
         _node.attr['style'] = 'filled,solid'
         _node.attr['fillcolor'] = 'moccasin'
-        _node.attr['label'] = repr_state(node)
+        _node.attr['label'] = _repr(node)
         for dependency in filter(lambda x:x.__class__==VCDependency, dependencies):
                 if node[quantity_indexes[dependency.left_name]][0] == dependency.left_mag:
                     _node.attr['style'] = 'filled,dotted'
