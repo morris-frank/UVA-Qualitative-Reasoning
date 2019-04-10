@@ -253,14 +253,14 @@ def build_graph(nodes: List[Node_State], edges: List[Edge_State], quantities: Li
     # Build the  edge labels
     for edge in edges:
         old,new = edge
-        labels = []
+        labels = set()
         for i in range(len(old)):
             if new[i][0] != old[i][0] and old[i][1] != 'ZERO':
-                labels.append('∂')
+                labels.add('∂')
             if quantities[i].exogenous and old[i][1] != new[i][1]:
-                labels.append('↘')
+                labels.add('↘')
         if edge in influenced_edges:
-            labels.append('I')
+            labels.add('I')
         G.get_edge(old, new).attr['label'] = ','.join(sorted(labels))
 
     # Adjust node styles
