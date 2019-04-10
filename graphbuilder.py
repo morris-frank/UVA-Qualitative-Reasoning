@@ -230,11 +230,14 @@ def build_graph(nodes: List[Node_State], edges: List[Edge_State], quantities: Li
         splines=True,
         sep=+1.2,
         normalize=True,
-        smoothing='avg_dist'
+        smoothing='avg_dist',
+        nodesep=0.2,
+        ranksep=0.01
     )
 
-    G.add_edges_from(edges)
+    G.add_edges_from(edges, fontsize=20)
 
+    # Build the  edge labels
     for edge in edges:
         old,new = edge
         labels = []
@@ -242,19 +245,23 @@ def build_graph(nodes: List[Node_State], edges: List[Edge_State], quantities: Li
             if new[i][0] != old[i][0] and old[i][1] != 'ZERO':
                 labels.append('∂')
             if quantities[i].exogenous and old[i][1] != new[i][1]:
-                labels.append('exo')
+                labels.append('↘')
         if edge in influenced_edges:
             labels.append('I')
-        G.get_edge(edge[0], edge[1]).attr['label'] = ','.join(sorted(labels))
+        G.get_edge(old, new).attr['label'] = ','.join(sorted(labels))
 
+    # Adjust node styles
     for node in nodes:
         if not G.has_node(node):
             continue
-        G.get_node(node).attr['label'] = repr_state(node)
+        _node = G.get_node(node)
+        _node.attr['style'] = 'filled,solid'
+        _node.attr['fillcolor'] = 'moccasin'
+        _node.attr['label'] = repr_state(node)
         for dependency in filter(lambda x:x.__class__==VCDependency, dependencies):
                 if node[quantity_indexes[dependency.left_name]][0] == dependency.left_mag:
-                    G.get_node(node).attr['style'] = 'dashed'
-                    G.get_node(node).attr['color'] = 'blue'
+                    _node.attr['style'] = 'filled,dotted'
+                    _node.attr['fillcolor'] = 'khaki'
     return G
 
 
