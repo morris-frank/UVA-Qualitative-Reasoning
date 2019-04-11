@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Union, Callable, List, Tuple, Iterable, Dict
 from itertools import product
 import pygraphviz as pgv
+import networkx as nx
 
 
 class Derivative(Enum):
@@ -22,16 +23,13 @@ class UnboundedMagnitude(Enum):
     POS = 1
 
 
-DClass = Union[Derivative]
-MClass = Union[BoundedMagnitude, UnboundedMagnitude]
-
-
 @dataclass
 class Quantity(object):
     name: str
-    magnitude: MClass
-    derivative: DClass
+    magnitude: object
+    derivative: object
     exogenous: bool
+
 
 @dataclass
 class VCDependency(object):
@@ -56,7 +54,7 @@ class IDependency(object):
 
 Dependency = Union[VCDependency, PDependency, IDependency]
 Quantity_State = Tuple[str, str]
-Node_State = Iterable[Quantity_State]
+Node_State = List[Quantity_State]
 Edge_State = Tuple[Node_State, Node_State]
 
 
@@ -69,8 +67,8 @@ def quantity_filter(quantity: Quantity_State) -> bool:
     Returns:
         bool -- whether valid
     """
-    mag,drv = quantity
-    if (mag == 'MAX'  and drv == 'POS') or \
+    mag, drv = quantity
+    if (mag == 'MAX' and drv == 'POS') or \
        (mag == 'ZERO' and drv == 'NEG'):
         return False
     return True
@@ -87,7 +85,8 @@ def node_filter(quantities: List[Quantity], dependencies: List[Dependency]) -> C
     Returns:
         Callable -- the callable filter
     """
-    quantity_indexes = {q.name:i for i,q in enumerate(quantities)}
+    quantity_indexes = {q.name: i for i, q in enumerate(quantities)}
+
     def _filter(node: Node_State) -> bool:
         """the filter
 
@@ -97,12 +96,12 @@ def node_filter(quantities: List[Quantity], dependencies: List[Dependency]) -> C
         Returns:
             bool -- whether its valid
         """
-        for dependency in filter(lambda x:x.__class__ in [VCDependency, PDependency], dependencies):
+        for dependency in filter(lambda x: x.__class__ in [VCDependency, PDependency], dependencies):
             left_idx = quantity_indexes[dependency.left_name]
             right_idx = quantity_indexes[dependency.right_name]
             if dependency.__class__ == VCDependency:
                 left_mag, right_mag = node[left_idx][0], node[right_idx][0]
-                if  (left_mag == dependency.left_mag) ^ (right_mag == dependency.right_mag):
+                if (left_mag == dependency.left_mag) ^ (right_mag == dependency.right_mag):
                     return False
             elif dependency.__class__ == PDependency:
                 left_drv, right_drv = node[left_idx][1], node[right_idx][1]
@@ -112,7 +111,8 @@ def node_filter(quantities: List[Quantity], dependencies: List[Dependency]) -> C
     return _filter
 
 
-def edge_filter(quantities: List[Quantity], dependencies: List[Dependency], influenced_edges: Dict[Edge_State, bool]) -> Callable[[Edge_State], bool]:
+def edge_filter(quantities: List[Quantity], dependencies: List[Dependency], influenced_edges: Dict[Edge_State, bool])\
+        -> Callable[[Edge_State], bool]:
     """Returns a filter that filters out edges (pair of node states) that are in conflict with the given dependencies
 
     Arguments:
@@ -122,20 +122,20 @@ def edge_filter(quantities: List[Quantity], dependencies: List[Dependency], infl
     Returns:
         Callable[[Edge_State], bool] -- the filter
     """
-    quantity_indexes = {q.name:i for i,q in enumerate(quantities)}
+    quantity_indexes = {q.name: i for i, q in enumerate(quantities)}
 
     # Build the chains of pdependencies:
     pdependency_chains = [set()]
-    for pdep in filter(lambda x:x.__class__==PDependency, dependencies):
-        leftIdx, rightIdx = quantity_indexes[pdep.left_name], quantity_indexes[pdep.right_name]
+    for pdep in filter(lambda x: x.__class__ == PDependency, dependencies):
+        left_idx, right_idx = quantity_indexes[pdep.left_name], quantity_indexes[pdep.right_name]
         missing = True
         for chain in pdependency_chains:
-            if leftIdx in chain or rightIdx in chain:
+            if left_idx in chain or right_idx in chain:
                 missing = False
-                chain.add(leftIdx)
-                chain.add(rightIdx)
+                chain.add(left_idx)
+                chain.add(right_idx)
         if missing:
-            pdependency_chains.append(set((leftIdx, rightIdx)))
+            pdependency_chains.append(set((left_idx, right_idx)))
     pdependency_chains.pop(0)
 
     def _filter(pair: Edge_State) -> bool:
@@ -162,50 +162,50 @@ def edge_filter(quantities: List[Quantity], dependencies: List[Dependency], infl
         # · Jump from negative derivative to positive
         # · If we have a derivative the value cannot stay the same
         for i in range(len(old)):
-            oldMag, oldDrv = old[i]
-            newMag, newDrv = new[i]
-            if (oldDrv == 'POS'  and newMag == 'ZERO') or \
-               (oldDrv == 'NEG'  and newMag == 'MAX' ) or \
-               (oldMag == 'ZERO' and newMag == 'MAX' ) or \
-               (oldMag == 'MAX'  and newMag == 'ZERO') or \
-               (oldDrv == 'POS'  and newDrv == 'NEG' ) or \
-               (oldDrv == 'NEG'  and newDrv == 'POS' ) or \
-               (oldDrv == 'ZERO' and oldMag != newMag):
+            old_mag, old_drv = old[i]
+            new_mag, new_drv = new[i]
+            if (old_drv == 'POS' and new_mag == 'ZERO') or \
+               (old_drv == 'NEG' and new_mag == 'MAX') or \
+               (old_mag == 'ZERO' and new_mag == 'MAX') or \
+               (old_mag == 'MAX' and new_mag == 'ZERO') or \
+               (old_drv == 'POS' and new_drv == 'NEG') or \
+               (old_drv == 'NEG' and new_drv == 'POS') or \
+               (old_drv == 'ZERO' and old_mag != new_mag):
                 return False
 
         # Filter out false influences
         directed_influences = {}
-        for idependency in filter(lambda x:x.__class__==IDependency, dependencies):
-            startIdx, endIdx = quantity_indexes[idependency.start], quantity_indexes[idependency.end]
-            if old[startIdx][0] == 'ZERO':
+        for idependency in filter(lambda x: x.__class__ == IDependency, dependencies):
+            start_idx, end_idx = quantity_indexes[idependency.start], quantity_indexes[idependency.end]
+            if old[start_idx][0] == 'ZERO':
                 continue
-            directed_influences.setdefault(endIdx, idependency.sign)
-            if directed_influences[endIdx] != idependency.sign:
-                directed_influences[endIdx] = None
-        for endIdx, sign in directed_influences.items():
+            directed_influences.setdefault(end_idx, idependency.sign)
+            if directed_influences[end_idx] != idependency.sign:
+                directed_influences[end_idx] = None
+        for end_idx, sign in directed_influences.items():
             if sign is None:
                 continue
-            if (old[endIdx][1] == sign) or \
-               (old[endIdx][1] == 'ZERO'):
-                if new[endIdx][1] != sign:
+            if (old[end_idx][1] == sign) or \
+               (old[end_idx][1] == 'ZERO'):
+                if new[end_idx][1] != sign:
                     return False
 
         for  i in range(len(old)):
-            oldMag, oldDrv = old[i]
-            newMag, newDrv = new[i]
-            if (quantities[i].exogenous or oldDrv == newDrv) or \
-               (oldDrv == 'POS' and newDrv == 'ZERO' and newMag == 'MAX') or \
-               (oldDrv == 'NEG' and newDrv == 'ZERO' and newMag == 'ZERO'):
+            old_mag, old_drv = old[i]
+            new_mag, new_drv = new[i]
+            if (quantities[i].exogenous or old_drv == new_drv) or \
+               (old_drv == 'POS' and new_drv == 'ZERO' and new_mag == 'MAX') or \
+               (old_drv == 'NEG' and new_drv == 'ZERO' and new_mag == 'ZERO'):
                 continue
             if i in directed_influences:
-                if directed_influences[i] is not None or directed_influences[i] == newDrv:
+                if directed_influences[i] is not None or directed_influences[i] == new_drv:
                     influenced_edges[pair] = True
                     continue
             cont = False
-            for dependency in filter(lambda x:x.__class__==PDependency, dependencies):
-                leftIdx,rightIdx = quantity_indexes[dependency.left_name], quantity_indexes[dependency.right_name]
-                if (quantities[i].name == dependency.left_name and new[leftIdx][1] == newDrv) or \
-                   (quantities[i].name == dependency.right_name and new[rightIdx][1] == newDrv):
+            for dependency in filter(lambda x: x.__class__ == PDependency, dependencies):
+                left_idx,right_idx = quantity_indexes[dependency.left_name], quantity_indexes[dependency.right_name]
+                if (quantities[i].name == dependency.left_name and new[left_idx][1] == new_drv) or \
+                   (quantities[i].name == dependency.right_name and new[right_idx][1] == new_drv):
                     cont = True
             if cont:
                 continue
@@ -232,10 +232,54 @@ def repr_func(quantities: List[Quantity]) -> Callable[[Node_State], str]:
     """
     sq = [q.name[:3] for q in quantities]
     sv = {'MAX': 'max', 'POS': '+', 'NEG': '-', 'ZERO': '0'}
+
     def _repr(node: Node_State):
         rlist = ['{}[{},{}]'.format(sq[i], sv[mag], sv[drv]) for i,(mag,drv) in enumerate(node)]
         return '\n'.join(rlist)
     return _repr
+
+
+def trace(graph: pgv.AGraph, start: str, end: str) -> pgv.AGraph:
+    nxgraph = nx.nx_agraph.from_agraph(graph)
+    assert(start in nxgraph and end in nxgraph)
+    shortest = nx.shortest_path(nxgraph, start, end)
+
+    shgraph = pgv.AGraph(directed=True,overlap=False,rankdir='LR')
+    for e in range(len(shortest)-1):
+        label = graph.get_edge(shortest[e], shortest[e+1]).attr['label']
+        shgraph.add_edge(shortest[e], shortest[e+1], label=label)
+    for n in shgraph.nodes_iter():
+        n.attr['label'] = graph.get_node(n).attr['label']
+        n.attr['style'] = graph.get_node(n).attr['style']
+        n.attr['fillcolor'] = graph.get_node(n).attr['fillcolor']
+    return shgraph
+
+
+def user_trace(graph: pgv.AGraph, quantities: List[Quantity]):
+    def request_value(quantity: Quantity) -> Tuple[str,str]:
+        print('Values for {}:'.format(quantity.name))
+        mag = input("Magnitude? (out of [{}])\n".format(','.join(quantity.magnitude._member_names_)))
+        if mag == "":
+            mag = quantity.magnitude._member_names_[0]
+        drv = input("Derivative? (out of [{}])\n".format(','.join(quantity.derivative._member_names_)))
+        if drv == "":
+            drv = quantity.derivative._member_names_[1]
+        return (mag,drv)
+
+    print('Enter start node for trace:')
+    start = str(tuple(request_value(q) for q in quantities))
+    if not graph.has_node(start):
+        print('START NODE NOT IN GRAPH')
+        return
+
+    print('\n\nEnter end node for trace:')
+    end = str(tuple(request_value(q) for q in quantities))
+    if not graph.has_node(end):
+        print('END NODE NOT IN GRAPH')
+        return
+
+    shgraph = trace(graph, start, end)
+    shgraph.draw('trace.pdf', prog='dot')
 
 
 def build_graph(nodes: List[Node_State], edges: List[Edge_State], quantities: List[Quantity], dependencies: List[Dependency], influenced_edges: Dict[Edge_State, bool]) -> pgv.AGraph:

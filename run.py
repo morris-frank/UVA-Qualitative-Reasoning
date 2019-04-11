@@ -1,6 +1,7 @@
 #!/bin/python
 from graphbuilder import Quantity, VCDependency, IDependency, PDependency, Derivative, UnboundedMagnitude, BoundedMagnitude
-from graphbuilder import simulate
+from graphbuilder import simulate, user_trace
+
 
 NO_EXTRAS = {
     'quantities': [
@@ -16,6 +17,7 @@ NO_EXTRAS = {
         IDependency('Outflow', 'Volume', 'NEG')
     ]
 }
+
 
 WITH_EXTRAS = {
     'quantities': [
@@ -40,9 +42,12 @@ WITH_EXTRAS = {
     ]
 }
 
+
 def main():
+    print('RUNNING without extras')
     graph = simulate(NO_EXTRAS['quantities'], NO_EXTRAS['dependencies'])
     graph.draw('no_extras.pdf', prog='dot')
+    user_trace(graph, NO_EXTRAS['quantities'])
 
     graph = simulate(WITH_EXTRAS['quantities'], WITH_EXTRAS['dependencies'])
     graph.draw('with_extras.pdf', prog='dot')
