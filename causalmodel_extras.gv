@@ -1,0 +1,44 @@
+digraph {
+    node [ fontsize=8 ];
+    edge [ fontsize=10 ];
+    fontsize=8;
+    I [style=bold, label="Inflow", fontsize=10]
+    Id [label="∂", shape=diamond]; I -> Id [dir=none, weight=20]
+    Im [label="Mag", shape=diamond]; I -> Im [dir=none, weight=20]
+    Ims [label="<Iplus> + | <Inull> 0", shape=record]; Im -> Ims [dir=none, weight=20]
+
+    O [style=bold, label="Outflow", fontsize=10]
+    Od [label="∂", shape=diamond]; O -> Od [dir=none, weight=20]
+    Om [label="Mag", shape=diamond]; O -> Om [dir=none, weight=20]
+    Oms [label="<Omax> max | <Oplus>+ | <Onull> 0", shape=record]; Om -> Oms [dir=none, weight=20]
+
+    V [style=bold, label="Volume", fontsize=10]
+    Vd [label="∂", shape=diamond]; V -> Vd [dir=none, weight=20]
+    Vm [label="Mag", shape=diamond]; V -> Vm [dir=none, weight=20]
+    Vms [label="<Vmax> max | <Vplus>+ | <Vnull> 0", shape=record]; Vm -> Vms [dir=none, weight=20]
+
+    H [style=bold, label="Height", fontsize=10]
+    Hd [label="∂", shape=diamond]; H -> Hd [dir=none, weight=20]
+    Hm [label="Mag", shape=diamond]; H -> Hm [dir=none, weight=20]
+    Hms [label="<Hmax> max | <Hplus>+ | <Hnull> 0", shape=record]; Hm -> Hms [dir=none, weight=20]
+
+
+    P [style=bold, label="Pressure", fontsize=10]
+    Pd [label="∂", shape=diamond]; P -> Pd [dir=none, weight=20]
+    Pm [label="Mag", shape=diamond]; P -> Pm [dir=none, weight=20]
+    Pms [label="<Pmax> max | <Pplus>+ | <Pnull> 0", shape=record]; Pm -> Pms [dir=none, weight=20]
+
+    Im -> Vd [label="I+"]
+    Om -> Vd [label="I-"]
+    Vd -> Hd [label="P+", dir=both]
+    Hd -> Pd [label="P+", dir=both]
+    Pd -> Od [label="P+", dir=both]
+
+
+    Vms:Vmax -> Hms:Hmax [label="VC", dir=both]
+    Vms:Vnull -> Hms:Hnull [label="VC", dir=both]
+    Hms:Hmax -> Pms:Pmax [label="VC", dir=both]
+    Hms:Hnull -> Pms:Pnull [label="VC", dir=both]
+    Pms:Pmax -> Oms:Omax [label="VC", dir=both]
+    Pms:Pnull -> Oms:Onull [label="VC", dir=both]
+}
