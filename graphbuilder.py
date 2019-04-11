@@ -123,6 +123,21 @@ def edge_filter(quantities: List[Quantity], dependencies: List[Dependency], infl
         Callable[[Edge_State], bool] -- the filter
     """
     quantity_indexes = {q.name:i for i,q in enumerate(quantities)}
+
+    # Build the chains of pdependencies:
+    pdependency_chains = [set()]
+    for pdep in filter(lambda x:x.__class__==PDependency, dependencies):
+        leftIdx, rightIdx = quantity_indexes[pdep.left_name], quantity_indexes[pdep.right_name]
+        missing = True
+        for chain in pdependency_chains:
+            if leftIdx in chain or rightIdx in chain:
+                missing = False
+                chain.add(leftIdx)
+                chain.add(rightIdx)
+        if missing:
+            pdependency_chains.append(set((leftIdx, rightIdx)))
+    pdependency_chains.pop(0)
+
     def _filter(pair: Edge_State) -> bool:
         """the filter
 
@@ -196,12 +211,11 @@ def edge_filter(quantities: List[Quantity], dependencies: List[Dependency], infl
                 continue
             return False
 
-        for dependency in filter(lambda x:x.__class__==PDependency, dependencies):
-            leftIdx, rightIdx = quantity_indexes[dependency.left_name], quantity_indexes[dependency.right_name]
-            if (old[leftIdx][1] == new[leftIdx][1] and old[leftIdx][1] == new[rightIdx][1]) or \
-               (quantities[leftIdx].exogenous or quantities[rightIdx].exogenous) or \
-               (leftIdx in directed_influences or rightIdx in directed_influences):
-                continue
+        for chain in pdependency_chains:
+            if all(old[i][1] == new[i][1] for i in chain) or \
+               any(quantities[i].exogenous for i in chain) or \
+               any(i in directed_influences for i in chain):
+               continue
             return False
         return True
     return _filter

@@ -26,15 +26,17 @@ WITH_EXTRAS = {
         Quantity('Pressure', BoundedMagnitude,  Derivative, False),
     ],
     'dependencies': [
-        VCDependency('Volume', 'Outflow', 'MAX', 'MAX'),
-        VCDependency('Volume', 'Outflow', 'ZERO', 'ZERO'),
+        VCDependency('Volume', 'Height', 'MAX', 'MAX'),
+        VCDependency('Volume', 'Height', 'ZERO', 'ZERO'),
+        VCDependency('Height', 'Pressure', 'MAX', 'MAX'),
+        VCDependency('Height', 'Pressure', 'ZERO', 'ZERO'),
         VCDependency('Pressure', 'Outflow', 'MAX', 'MAX'),
         VCDependency('Pressure', 'Outflow', 'ZERO', 'ZERO'),
         IDependency('Inflow', 'Volume', 'POS'),
         IDependency('Outflow', 'Volume', 'NEG'),
-        PDependency('Pressure', 'Outflow'),
         PDependency('Volume', 'Height'),
-        PDependency('Height', 'Pressure')
+        PDependency('Height', 'Pressure'),
+        PDependency('Pressure', 'Outflow')
     ]
 }
 
