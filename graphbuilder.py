@@ -53,10 +53,12 @@ class IDependency(object):
     end: str
     sign: str
 
+
 Dependency = Union[VCDependency, PDependency, IDependency]
 Quantity_State = Tuple[str, str]
 Node_State = Iterable[Quantity_State]
 Edge_State = Tuple[Node_State, Node_State]
+
 
 def quantity_filter(quantity: Quantity_State) -> bool:
     """Filters out invalid single states of a quantity.
